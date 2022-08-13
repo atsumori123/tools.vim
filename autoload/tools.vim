@@ -15,6 +15,10 @@ function s:tools_disp_menu(menu)
 		" Tabstop
 		call add(s:ToolsMenu, "Tabstop(toggle 4,8) : ".&tabstop)
 
+		" modifiable
+		let temp = &modifiable == 0 ? "modifiable" : "nomodifiable"
+		call add(s:ToolsMenu, "modifiable          : ".temp)
+
 		" R/W
 		let temp = &readonly == 0 ? "Write Allow" : "Read Only"
 		call add(s:ToolsMenu, "R/W                 : ".temp)
@@ -108,20 +112,24 @@ function! s:tools_menu_selected_handler(winid, result) abort
 		endif
 
 	elseif a:result == 3
+		" modifiable / nomodifiable
+		execute &modifiable ? 'set nomodifiable' : 'set modifiable'
+
+	elseif a:result == 4
 		" R/W (ReadOnly / WriteAllow)
 		execute &readonly ? 'set noro' : 'set ro'
 
-	elseif a:result == 4
+	elseif a:result == 5
 		" Search-case (noignorecase / ignorecase)
 		execute &ignorecase ? 'set noignorecase' : 'set ignorecase'
 
-	elseif a:result == 5
+	elseif a:result == 6
 "		execute 'cd '.expand('%:p:h')
 "		let dir = input('Set current directory: ', getcwd(), 'dir')
 		let dir = input('Set current directory: ', expand("%:h"), 'dir')
 		execute 'cd '.dir
 
-	elseif a:result == 6
+	elseif a:result == 7
 		let @* = expand("%:p")
 	endif
 
