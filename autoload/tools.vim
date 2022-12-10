@@ -1,108 +1,19 @@
-"*******************************************************
-"* Function name: tools_disp_menu()
-"* Function		: Make popup menu
-"*
-"* Argument		: menu : ID of display menu
-"*******************************************************
-function s:tools_disp_menu(menu)
 
-	let s:ToolsMenu = []
-	if a:menu == 'M' 
-		" Control code
-		let temp = &list == 0 ? "UnDisplay" : "Display"
-		call add(s:ToolsMenu, "Control code        : ".temp)
+let s:save_cpo = &cpoptions
+set cpoptions&vim
 
-		" Tabstop
-		call add(s:ToolsMenu, "Tabstop(toggle 4,8) : ".&tabstop)
-
-		" modifiable
-		let temp = &modifiable == 0 ? "modifiable" : "nomodifiable"
-		call add(s:ToolsMenu, "modifiable          : ".temp)
-
-		" R/W
-		let temp = &readonly == 0 ? "Write Allow" : "Read Only"
-		call add(s:ToolsMenu, "R/W                 : ".temp)
-
-		" Search-case
-		let temp = &ignorecase == 0 ? "Sensitive" : "Insensitive"
-		call add(s:ToolsMenu, "Search case         : ".temp)
-
-		" Change current path
-		let temp = execute("pwd")
-		let temp = strpart(temp, 1, strlen(temp)-1)
-		call add(s:ToolsMenu, "Set current dir     : ".temp)
-
-		" Get Current file path
-		let temp = expand("%:p")
-		call add(s:ToolsMenu, "Get file path       : ".temp)
-
-		let l:selected_handler = 's:tools_menu_selected_handler'
-	
-	elseif a:menu == 'ToolsConvert'
-	endif
-
-	call popup_menu(s:ToolsMenu, #{
-			\ filter: 'Tools_menu_filter',
-			\ callback: l:selected_handler
-			\ })
-endfunction
-"
-"*******************************************************
-"* Function name: Tools_menu_filter()
-"* Function		: Filtering when popup-menu is selected
-"*
-"* Argument		: winid : Winddow ID
-"*				  key   : Pressed key
-"*******************************************************
-function! Tools_menu_filter(winid, key) abort
-
-	if a:key == 'l'
-		" ---------------------------------
-		"  when pressed 'l'(next) key
-		" ---------------------------------
-		call win_execute(a:winid, 'let w:lnum = line(".")')
-		let l:index = getwinvar(a:winid, 'lnum', 0)
-		call popup_close(a:winid, l:index)
-		return 1
-
-	elseif a:key == 'h'
-		" ---------------------------------
-		"  when pressed 'h'(back) key
-		" ---------------------------------
-		let l:index = 98
-		call popup_close(a:winid, l:index)
-		return 1
-
-	elseif a:key == 'q'
-		" ---------------------------------
-		"  when pressed 'q'(Terminate) key
-		" ---------------------------------
-		let l:index = 99
-		call popup_close(a:winid, l:index)
-		return 1
-	endif
-
-	" --------------------------------
-	"  Other, pass to normal filter
-	" --------------------------------
-	return popup_filter_menu(a:winid, a:key)
-endfunction
-
-"*******************************************************
-"* Function name: s:tools_menu_selected_handler()
-"* Function		: Handler processing when selected of tools menu
-"*
-"* Argument		: winid : Winddow ID
-"*				  result: Number of selected item
-"*******************************************************
-function! s:tools_menu_selected_handler(winid, result) abort
-
+"-------------------------------------------------------
+" s:tools_proc()
+"-------------------------------------------------------
+function! s:tools_proc(result) abort
 	if a:result == 1
 		" Control-code (Display / Undisplay)
+		close
 		execute &list ? 'set nolist' : 'set list'
 
 	elseif a:result == 2
 		" Tabstop
+		close
 		if &tabstop == 4
 			execute 'set tabstop=8'
 			execute 'set shiftwidth=8'
@@ -113,33 +24,137 @@ function! s:tools_menu_selected_handler(winid, result) abort
 
 	elseif a:result == 3
 		" modifiable / nomodifiable
+		close
 		execute &modifiable ? 'set nomodifiable' : 'set modifiable'
 
 	elseif a:result == 4
 		" R/W (ReadOnly / WriteAllow)
+		close
 		execute &readonly ? 'set noro' : 'set ro'
 
 	elseif a:result == 5
 		" Search-case (noignorecase / ignorecase)
+		close
 		execute &ignorecase ? 'set noignorecase' : 'set ignorecase'
 
 	elseif a:result == 6
-"		execute 'cd '.expand('%:p:h')
-"		let dir = input('Set current directory: ', getcwd(), 'dir')
+		close
 		let dir = input('Set current directory: ', expand("%:h"), 'dir')
 		execute 'cd '.dir
 
 	elseif a:result == 7
+		close
 		let @* = expand("%:p")
 	endif
-
 endfunction
 
-"------------------------------------------------------
-" tools#start()
-"------------------------------------------------------
-function tools#start()
-	call s:tools_disp_menu("M")
+"-------------------------------------------------------
+" s:selected_handler()
+"-------------------------------------------------------
+function! s:selected_handler() abort
+	if empty(s:selected_handler)
+		return
+	endif
+
+	let s:func = function(s:selected_handler)
+	call s:func(line("."))
 endfunction
 
+"-------------------------------------------------------
+" s:make_menu()
+"-------------------------------------------------------
+function s:make_menu(menu) abort
 
+	let menu = []
+	if a:menu == 'M'
+		" Control code
+		let temp = &list == 0 ? "UnDisplay" : "Display"
+		call add(menu, " Control code        : ".temp)
+
+		" Tabstop
+		call add(menu, " Tabstop(toggle 4,8) : ".&tabstop)
+		"
+		" modifiable
+		let temp = &modifiable == 0 ? "nomodifiable" : "modifiable"
+		call add(menu, " modifiable          : ".temp)
+
+		" R/W
+		let temp = &readonly == 0 ? "Write Allow" : "Read Only"
+		call add(menu, " R/W                 : ".temp)
+
+		" Search-case
+		let temp = &ignorecase == 0 ? "Sensitive" : "Insensitive"
+		call add(menu, " Search case         : ".temp)
+
+		" Change current path
+		let temp = execute("pwd")
+		let temp = strpart(temp, 1, strlen(temp)-1)
+		call add(menu, " Set current dir     : ".temp)
+
+		" Get Current file path
+		let temp = expand("%:p")
+		call add(menu, " Get file path       : ".temp)
+
+		let s:selected_handler = 's:tools_proc'
+	endif
+
+	return menu
+endfunction
+
+"-------------------------------------------------------
+" s:open_floating_window()
+"-------------------------------------------------------
+function! s:open_floating_window(menu) abort
+	let menu = s:make_menu(a:menu)
+
+	let winnum = bufwinnr('-tools-')
+	if winnum != -1
+		" Already in the window, jump to it
+		exe winnum.'wincmd w'
+		return
+	else
+		" open floating window
+		let win_id = nvim_open_win(bufnr('%'), v:true, {
+			\   'width': 60,
+			\   'height': len(menu),
+			\   'relative': 'cursor',
+			\   'anchor': "NW",
+			\   'row': 1,
+			\   'col': 0,
+			\   'external': v:false,
+			\})
+
+		" draw to new buffer
+		enew
+		file `= '-tools-'`
+	endif
+
+	setlocal modifiable
+
+	call setline('.', menu)
+	setlocal buftype=nofile
+	setlocal bufhidden=delete
+	setlocal noswapfile
+	setlocal nowrap
+	setlocal nonumber
+
+	nnoremap <buffer> <silent> <CR> :call <SID>selected_handler()<CR>
+	nnoremap <buffer> <silent> q :close<CR>
+
+	execute 'syntax match gr "^.*\: "'
+	highlight link gr Directory
+	highlight MyNormal guibg=#404040
+	setlocal winhighlight=Normal:MyNormal
+
+	setlocal nomodifiable
+endfunction
+
+"-------------------------------------------------------
+" s:start()
+"-------------------------------------------------------
+function! tools#start() abort
+	call s:open_floating_window("M")
+endfunction
+
+let &cpoptions = s:save_cpo
+unlet s:save_cpo
