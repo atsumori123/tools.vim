@@ -7,7 +7,7 @@
 function s:tools_disp_menu(menu)
 
 	let s:ToolsMenu = []
-	if a:menu == 'M' 
+	if a:menu == 'M'
 		" Control code
 		let temp = &list == 0 ? "UnDisplay" : "Display"
 		call add(s:ToolsMenu, "Control code        : ".temp)
@@ -16,16 +16,19 @@ function s:tools_disp_menu(menu)
 		call add(s:ToolsMenu, "Tabstop(toggle 4,8) : ".&tabstop)
 
 		" modifiable
-		let temp = &modifiable == 0 ? "modifiable" : "nomodifiable"
+		let temp = &modifiable ? "modifiable" : "nomodifiable"
 		call add(s:ToolsMenu, "modifiable          : ".temp)
 
 		" R/W
-		let temp = &readonly == 0 ? "Write Allow" : "Read Only"
+		let temp = &readonly ? "Read Only" : "Write Allow"
 		call add(s:ToolsMenu, "R/W                 : ".temp)
 
 		" Search-case
-		let temp = &ignorecase == 0 ? "Sensitive" : "Insensitive"
+		let temp = &ignorecase ? "Insensitive" : "Sensitive"
 		call add(s:ToolsMenu, "Search case         : ".temp)
+
+		" reset errorformat
+		call add(s:ToolsMenu, "Reset errorformat")
 
 		" Change current path
 		let temp = execute("pwd")
@@ -37,7 +40,7 @@ function s:tools_disp_menu(menu)
 		call add(s:ToolsMenu, "Get file path       : ".temp)
 
 		let l:selected_handler = 's:tools_menu_selected_handler'
-	
+
 	elseif a:menu == 'ToolsConvert'
 	endif
 
@@ -56,24 +59,24 @@ endfunction
 "*******************************************************
 function! Tools_menu_filter(winid, key) abort
 
-	if a:key == 'l'
+"	if a:key == 'l'
 		" ---------------------------------
 		"  when pressed 'l'(next) key
 		" ---------------------------------
-		call win_execute(a:winid, 'let w:lnum = line(".")')
-		let l:index = getwinvar(a:winid, 'lnum', 0)
-		call popup_close(a:winid, l:index)
-		return 1
+"		call win_execute(a:winid, 'let w:lnum = line(".")')
+"		let l:index = getwinvar(a:winid, 'lnum', 0)
+"		call popup_close(a:winid, l:index)
+"		return 1
 
-	elseif a:key == 'h'
+"	elseif a:key == 'h'
 		" ---------------------------------
 		"  when pressed 'h'(back) key
 		" ---------------------------------
-		let l:index = 98
-		call popup_close(a:winid, l:index)
-		return 1
+"		let l:index = 98
+"		call popup_close(a:winid, l:index)
+"		return 1
 
-	elseif a:key == 'q'
+	if a:key == 'q'
 		" ---------------------------------
 		"  when pressed 'q'(Terminate) key
 		" ---------------------------------
@@ -124,12 +127,24 @@ function! s:tools_menu_selected_handler(winid, result) abort
 		execute &ignorecase ? 'set noignorecase' : 'set ignorecase'
 
 	elseif a:result == 6
-"		execute 'cd '.expand('%:p:h')
-"		let dir = input('Set current directory: ', getcwd(), 'dir')
+		" reset errorformat
+		if &buftype != 'quickfix'
+			echohl WarningMsg | echomsg 'This buffer type is not quickfix' | echohl None
+			return
+		endif
+		if has('unix')
+			execute 'set errorformat=%f\|%l\|\ %m'
+		else
+			execute 'set errorformat=%f\|%l\ col\ %c\|\ %m'
+		endif
+		silent cgetbuffer
+		set modifiable
+
+	elseif a:result == 7
 		let dir = input('Set current directory: ', expand("%:h"), 'dir')
 		execute 'cd '.dir
 
-	elseif a:result == 7
+	elseif a:result == 8
 		let @* = expand("%:p")
 	endif
 
