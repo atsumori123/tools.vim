@@ -132,11 +132,7 @@ function! s:tools_menu_selected_handler(winid, result) abort
 			echohl WarningMsg | echomsg 'This buffer type is not quickfix' | echohl None
 			return
 		endif
-		if has('unix')
-			execute 'set errorformat=%f\|%l\|\ %m'
-		else
-			execute 'set errorformat=%f\|%l\ col\ %c\|\ %m'
-		endif
+		execute 'set errorformat=%f\|%l\|\ %m'
 		silent cgetbuffer
 		set modifiable
 
