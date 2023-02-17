@@ -10,44 +10,50 @@ function s:tools_disp_menu(menu)
 	if a:menu == 'M'
 		" Control code
 		let temp = &list == 0 ? "UnDisplay" : "Display"
-		call add(s:ToolsMenu, "Control code        : ".temp)
+		call add(s:ToolsMenu, " Control code        : ".temp)
 
 		" Tabstop
-		call add(s:ToolsMenu, "Tabstop(toggle 4,8) : ".&tabstop)
+		call add(s:ToolsMenu, " Tabstop(toggle 4,8) : ".&tabstop)
 
 		" modifiable
 		let temp = &modifiable ? "modifiable" : "nomodifiable"
-		call add(s:ToolsMenu, "modifiable          : ".temp)
+		call add(s:ToolsMenu, " Modifiable          : ".temp)
 
 		" R/W
 		let temp = &readonly ? "Read Only" : "Write Allow"
-		call add(s:ToolsMenu, "R/W                 : ".temp)
+		call add(s:ToolsMenu, " R/W                 : ".temp)
 
 		" Search-case
 		let temp = &ignorecase ? "Insensitive" : "Sensitive"
-		call add(s:ToolsMenu, "Search case         : ".temp)
+		call add(s:ToolsMenu, " Search case         : ".temp)
 
 		" reset errorformat
-		call add(s:ToolsMenu, "Reset errorformat")
+		call add(s:ToolsMenu, " Reset errorformat")
 
 		" Change current path
 		let temp = execute("pwd")
 		let temp = strpart(temp, 1, strlen(temp)-1)
-		call add(s:ToolsMenu, "Set current dir     : ".temp)
+		call add(s:ToolsMenu, " Set current dir     : ".temp)
 
 		" Get Current file path
 		let temp = expand("%:p")
-		call add(s:ToolsMenu, "Get file path       : ".temp)
-
-		let l:selected_handler = 's:tools_menu_selected_handler'
+		call add(s:ToolsMenu, " Get file path       : ".temp)
 
 	elseif a:menu == 'ToolsConvert'
 	endif
 
-	call popup_menu(s:ToolsMenu, #{
-			\ filter: 'Tools_menu_filter',
-			\ callback: l:selected_handler
+	const winid = popup_create(s:ToolsMenu, {
+			\ 'border': [1,1,1,1],
+			\ 'borderchars': ['─', '│', '─', '│', '┌', '┐', '┘', '└'],
+			\ 'cursorline': 1,
+			\ 'wrap': v:false,
+			\ 'mapping': v:false,
+			\ 'title': ' Tools ',
+			\ 'callback': "s:tools_menu_selected_handler",
+			\ 'filter': 'Tools_menu_filter',
+			\ 'filtermode': 'n'
 			\ })
+	call popup_filter_menu(winid,'k')
 endfunction
 "
 "*******************************************************
